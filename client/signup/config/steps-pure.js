@@ -388,6 +388,11 @@ export function generateSteps( {
 			providesDependencies: [ 'siteTitle', 'address', 'email', 'phone' ],
 		},
 
+		'site-style': {
+			stepName: 'site-style',
+			providesDependencies: [ 'siteStyle', 'themeSlugWithRepo' ],
+		},
+
 		// Steps with preview
 		// These can be removed once we make the preview the default
 		'site-topic-with-preview': {
@@ -406,6 +411,14 @@ export function generateSteps( {
 			},
 		},
 
+		'site-style-with-preview': {
+			stepName: 'site-style-with-preview',
+			providesDependencies: [ 'siteStyle', 'themeSlugWithRepo' ],
+			props: {
+				showSiteMockups: true,
+			},
+		},
+
 		'domains-with-preview': {
 			stepName: 'domains-with-preview',
 			apiRequestFunction: createSiteWithCart,
@@ -416,11 +429,6 @@ export function generateSteps( {
 			},
 			dependencies: [ 'themeSlugWithRepo' ],
 			delayApiRequestUntilComplete: true,
-		},
-
-		'site-style': {
-			stepName: 'site-style',
-			providesDependencies: [ 'siteStyle', 'themeSlugWithRepo' ],
 		},
 	};
 }

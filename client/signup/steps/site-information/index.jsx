@@ -52,12 +52,7 @@ class SiteInformation extends Component {
 	}
 
 	handleInputChange = ( { target: { name, value } } ) => {
-		this.setState( { [ name ]: value } );
-		if ( this.props.flowName === 'onboarding-dev' ) {
-			setTimeout( () => {
-				this.props.updateStep( this.state );
-			}, 50 );
-		}
+		this.setState( { [ name ]: value }, () => this.props.updateStep( this.state ) );
 	};
 
 	handleSubmit = event => {

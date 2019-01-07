@@ -22,12 +22,18 @@ import FormLabel from 'components/forms/form-label';
 import FormTextInput from 'components/forms/form-text-input';
 import FormInputValidation from 'components/forms/form-input-validation';
 import FormTextInputWithAffixes from 'components/forms/form-text-input-with-affixes';
+import getUserSetting from 'state/selectors/get-user-setting';
 import { cartItems } from 'lib/cart-values';
 import { domainManagementEmail } from 'my-sites/domains/paths';
 import { addItem } from 'lib/upgrades/actions';
-import { hasGoogleApps, getGoogleAppsSupportedDomains } from 'lib/domains';
+import {
+	hasGoogleApps,
+	getGoogleAppsSupportedDomains,
+	hasGoogleAppsSupportedDomain,
+} from 'lib/domains';
 import { filter as filterUsers, validate as validateUsers } from 'lib/domains/google-apps-users';
 import DomainsSelect from './domains-select';
+import QueryUserSettings from 'components/data/query-user-settings';
 
 function getGoogleAppsCartItems( { domains, fieldsets } ) {
 	let groups = groupBy( fieldsets, function( fieldset ) {
@@ -60,16 +66,62 @@ function getGoogleAppsCartItems( { domains, fieldsets } ) {
 class AddEmailAddressesCard extends React.Component {
 	constructor( props ) {
 		super( props );
+
 		this.state = {
-			fieldsets: this.getNewFieldset(),
+			fieldsets: [ this.getNewFieldset() ],
 			validationErrors: null,
+		};
+	}
+
+	static getDerivedStateFromProps( props, state ) {
+		// Retrieves information from the first additional user
+		const [
+			{
+				firstName: { value: firstName },
+				lastName: { value: lastName },
+				wasUserEdited,
+			},
+		] = state.fieldsets;
+
+		if ( wasUserEdited ) {
+			return null;
+		}
+
+		if ( props.firstName === null || props.lastName === null ) {
+			return null;
+		}
+
+		if ( props.firstName === firstName && props.lastName === lastName ) {
+			return null;
+		}
+
+		// Updates information of the first additional user with the current user settings data
+		const fieldsets = state.fieldsets.map( ( fieldset, index ) => {
+			if ( index !== 0 ) {
+				return fieldset;
+			}
+
+			return {
+				...fieldset,
+				firstName: { value: props.firstName },
+				lastName: { value: props.lastName },
+				username: { value: kebabCase( props.firstName ) },
+			};
+		} );
+
+		return {
+			...state,
+			fieldsets,
 		};
 	}
 
 	getNewFieldset() {
 		let domain;
 
-		if ( this.props.selectedDomainName ) {
+		if (
+			this.props.selectedDomainName &&
+			hasGoogleAppsSupportedDomain( [ this.props.selectedDomainName ] )
+		) {
 			domain = this.props.selectedDomainName;
 		} else if ( ! this.props.isRequestingSiteDomains ) {
 			domain = this.getFirstDomainName();
@@ -77,14 +129,13 @@ class AddEmailAddressesCard extends React.Component {
 			domain = null;
 		}
 
-		return [
-			{
-				username: { value: '' },
-				domain: { value: domain },
-				firstName: { value: '' },
-				lastName: { value: '' },
-			},
-		];
+		return {
+			username: { value: '' },
+			domain: { value: domain },
+			firstName: { value: '' },
+			lastName: { value: '' },
+			wasUserEdited: false,
+		};
 	}
 
 	removeValidationErrors = () => {
@@ -134,6 +185,7 @@ class AddEmailAddressesCard extends React.Component {
 	render() {
 		return (
 			<div className="add-google-apps__card">
+				<QueryUserSettings />
 				{ this.validationErrors() }
 
 				<Card className="add-google-apps__inner">
@@ -264,6 +316,7 @@ class AddEmailAddressesCard extends React.Component {
 
 		command.fieldsets[ index ] = {};
 		command.fieldsets[ index ][ fieldName ] = { value: { $set: newValue.trim() } };
+		command.fieldsets[ index ].wasUserEdited = { $set: true };
 
 		if ( fieldName === 'domain' ) {
 			this.props.domainChange( newValue, index );
@@ -292,7 +345,7 @@ class AddEmailAddressesCard extends React.Component {
 		event.preventDefault();
 
 		this.setState( {
-			fieldsets: this.state.fieldsets.concat( this.getNewFieldset() ),
+			fieldsets: this.state.fieldsets.concat( [ this.getNewFieldset() ] ),
 		} );
 
 		this.props.addAnotherEmailAddressClick( this.props.selectedDomainName );
@@ -448,7 +501,10 @@ AddEmailAddressesCard.propTypes = {
 };
 
 export default connect(
-	null,
+	state => ( {
+		firstName: getUserSetting( state, 'first_name' ),
+		lastName: getUserSetting( state, 'last_name' ),
+	} ),
 	{
 		addAnotherEmailAddressClick,
 		cancelClick,

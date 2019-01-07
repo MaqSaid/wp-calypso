@@ -184,7 +184,6 @@ class AboutStep extends Component {
 			nextFlowName = flowName;
 
 		//Inputs
-		const siteTitleInput = formState.getFieldValue( this.state.form, 'siteTitle' );
 		const userExperienceInput = this.state.userExperience;
 		const siteTopicInput = formState.getFieldValue( this.state.form, 'siteTopic' );
 		const eventAttributes = {};
@@ -584,6 +583,7 @@ class AboutStep extends Component {
 				stepContent={ this.renderContent() }
 				allowBackFirstStep={ allowBackFirstStep }
 				backUrl={ backUrl }
+				backLabelText={ hasMultipleSites ? translate( 'Back to dashboard' ) : false }
 			/>
 		);
 	}

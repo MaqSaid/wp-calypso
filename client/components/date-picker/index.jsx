@@ -7,7 +7,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import DayPicker from 'react-day-picker';
-import { noop, merge, map, filter, get } from 'lodash';
+import { noop, map, filter, get } from 'lodash';
 import { localize } from 'i18n-calypso';
 
 /**
@@ -23,9 +23,18 @@ class DatePicker extends PureComponent {
 		calendarViewDate: PropTypes.object,
 		showOutsideDays: PropTypes.bool,
 		events: PropTypes.array,
-		selectedDays: PropTypes.array,
+		selectedDays: PropTypes.oneOfType( [
+			PropTypes.instanceOf( Date ),
+			PropTypes.shape( {
+				from: PropTypes.instanceOf( Date ),
+				to: PropTypes.instanceOf( Date ),
+			} ),
+			PropTypes.array,
+			PropTypes.func,
+		] ),
+
 		disabledDays: PropTypes.array,
-		locale: PropTypes.object,
+		locale: PropTypes.string,
 		modifiers: PropTypes.object,
 		moment: PropTypes.func.isRequired,
 
@@ -48,7 +57,6 @@ class DatePicker extends PureComponent {
 		modifiers: {},
 		fromMonth: null,
 		selectedDay: null,
-
 		onMonthChange: noop,
 		onSelectDay: noop,
 		onDayMouseEnter: noop,
@@ -88,7 +96,7 @@ class DatePicker extends PureComponent {
 		return eventsInDay;
 	}
 
-	locale() {
+	localeUtils() {
 		const { moment } = this.props;
 		const localeData = moment().localeData();
 		const firstDayOfWeek = localeData.firstDayOfWeek();
@@ -120,7 +128,7 @@ class DatePicker extends PureComponent {
 			},
 		};
 
-		return merge( locale, this.props.locale );
+		return locale;
 	}
 
 	setCalendarDay = ( day, modifiers ) => {
@@ -207,7 +215,8 @@ class DatePicker extends PureComponent {
 				onDayTouchEnd={ this.setCalendarDay }
 				onDayTouchMove={ this.handleDayTouchMove }
 				renderDay={ this.renderDay }
-				localeUtils={ this.locale() }
+				locale={ this.props.locale }
+				localeUtils={ this.localeUtils() }
 				onMonthChange={ this.props.onMonthChange }
 				showOutsideDays={ this.props.showOutsideDays }
 				navbarElement={ <DatePickerNavBar /> }

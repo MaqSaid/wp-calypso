@@ -79,7 +79,8 @@ export const getIncludedDomainPurchase = ( state, subscriptionPurchase ) => {
 		sitePurchases,
 		purchase =>
 			( isDomainMapping( purchase ) || isDomainRegistration( purchase ) ) &&
-			includedDomain === purchase.meta
+			includedDomain === purchase.meta &&
+			purchase.refundAmount === 0
 	);
 
 	return domainPurchase;
